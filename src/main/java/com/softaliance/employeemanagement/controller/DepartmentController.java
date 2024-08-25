@@ -4,6 +4,7 @@ import com.softaliance.employeemanagement.requests.DepartmentRequest;
 import com.softaliance.employeemanagement.responses.ApiResponse;
 import com.softaliance.employeemanagement.services.DepartmentService;
 import com.softaliance.employeemanagement.utils.Utilities;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,7 +29,7 @@ public class DepartmentController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse> createDepartment(@RequestBody DepartmentRequest request) {
+    public ResponseEntity<ApiResponse> createDepartment(@Valid @RequestBody DepartmentRequest request) {
         ApiResponse apiResponse = departmentService.createDepartment(request);
         if(apiResponse.getCode().equals("00")){
             return new ResponseEntity<>(apiResponse, HttpStatus.CREATED);
@@ -57,9 +58,9 @@ public class DepartmentController {
         return utilities.getApiResponseResponseEntity(apiResponse);
     }
 
-    @GetMapping("/add/manager/{email}")
-    public ResponseEntity<ApiResponse> addManagerToDepartment(@PathVariable String email) {
-        ApiResponse apiResponse = departmentService.addManagerToDepartment(email);
-        return utilities.getApiResponseResponseEntity(apiResponse);
-    }
+//    @GetMapping("/add/manager/{email}")
+//    public ResponseEntity<ApiResponse> addManagerToDepartment(@PathVariable String email) {
+//        ApiResponse apiResponse = departmentService.addManagerToDepartment(email);
+//        return utilities.getApiResponseResponseEntity(apiResponse);
+//    }
 }

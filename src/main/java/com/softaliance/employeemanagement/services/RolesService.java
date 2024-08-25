@@ -2,8 +2,9 @@ package com.softaliance.employeemanagement.services;
 
 import com.softaliance.employeemanagement.models.Roles;
 import com.softaliance.employeemanagement.repository.RolesRepository;
-import com.softaliance.employeemanagement.requests.DepartmentRequest;
+import com.softaliance.employeemanagement.requests.RolesRequest;
 import com.softaliance.employeemanagement.responses.ApiResponse;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,7 +19,7 @@ public class RolesService {
         this.rolesRepository = rolesRepository;
     }
 
-    public ApiResponse getDepartment(Long id) {
+    public ApiResponse getRole(Long id) {
         Optional<Roles> roles;
         try{
             roles = rolesRepository.findById(id);
@@ -31,18 +32,18 @@ public class RolesService {
             }else{
                 return ApiResponse.builder()
                         .code("90")
-                        .message("Unable to retrieve department")
+                        .message("Unable to retrieve role")
                         .build();
             }
         }catch (Exception e){
             return ApiResponse.builder()
                     .code("99")
-                    .message("Unable to retrieve department, try again later")
+                    .message("Unable to retrieve role, try again later")
                     .build();
         }
     }
 
-    public ApiResponse getAllDepartments() {
+    public ApiResponse getAllRoles() {
         List<Roles> roles;
         try {
             roles = rolesRepository.findAll();
@@ -54,21 +55,27 @@ public class RolesService {
         }catch (Exception e){
             return ApiResponse.builder()
                     .code("99")
-                    .message("Unable to retrieve departments, try again later")
+                    .message("Unable to retrieve roles, try again later")
                     .build();
         }
     }
 
-    public ApiResponse createDepartment(DepartmentRequest request) {
+    public ApiResponse createRoles(RolesRequest request) {
         Roles roles = new Roles();
         try{
             roles.setName(request.getName());
             roles.setDescription(request.getDescription());
             roles = rolesRepository.save(roles);
-        } catch (Exception e){
+        } catch (DataIntegrityViolationException e) {
             return ApiResponse.builder()
                     .code("99")
-                    .message("Unable to create departments, try again later")
+                    .message("Unable to create role, role details has been used")
+                    .build();
+        }
+        catch (Exception e){
+            return ApiResponse.builder()
+                    .code("99")
+                    .message("Unable to create role, try again later")
                     .build();
         }
         return ApiResponse.builder()
@@ -78,7 +85,7 @@ public class RolesService {
                 .build();
     }
 
-    public ApiResponse updateDepartment(Long id, DepartmentRequest request) {
+    public ApiResponse updateRole(Long id, RolesRequest request) {
         Optional<Roles> savedRoles;
         try{
             savedRoles = rolesRepository.findById(id);
@@ -89,13 +96,13 @@ public class RolesService {
             }else{
                 return ApiResponse.builder()
                         .code("90")
-                        .message("Unable to retrieve department")
+                        .message("Unable to retrieve role")
                         .build();
             }
         }catch(Exception e){
             return ApiResponse.builder()
                     .code("99")
-                    .message("Unable to update department, try again later")
+                    .message("Unable to update role, try again later")
                     .build();
         }
         return ApiResponse.builder()
@@ -105,7 +112,7 @@ public class RolesService {
                 .build();
     }
 
-    public ApiResponse deleteDepartment(Long id) {
+    public ApiResponse deleteRole(Long id) {
         Optional<Roles> savedRoles;
         try {
             savedRoles = rolesRepository.findById(id);
@@ -114,13 +121,13 @@ public class RolesService {
             }else {
                 return ApiResponse.builder()
                         .code("90")
-                        .message("Department not found")
+                        .message("Role not found")
                         .build();
             }
         }catch (Exception e){
             return ApiResponse.builder()
                     .code("99")
-                    .message("Unable to delete department, try again later")
+                    .message("Unable to delete role, try again later")
                     .build();
         }
         return ApiResponse.builder()

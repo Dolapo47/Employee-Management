@@ -8,8 +8,10 @@ import com.softaliance.employeemanagement.repository.EmployeeRepository;
 import com.softaliance.employeemanagement.repository.RolesRepository;
 import com.softaliance.employeemanagement.requests.DepartmentRequest;
 import com.softaliance.employeemanagement.responses.ApiResponse;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,12 +19,10 @@ import java.util.Optional;
 public class DepartmentService {
     private final DepartmentRepository departmentRepository;
     private final EmployeeRepository employeeRepository;
-    private final RolesRepository rolesRepository;
 
-    public DepartmentService(DepartmentRepository departmentRepository, EmployeeRepository employeeRepository, RolesRepository rolesRepository) {
+    public DepartmentService(DepartmentRepository departmentRepository, EmployeeRepository employeeRepository) {
         this.departmentRepository = departmentRepository;
         this.employeeRepository = employeeRepository;
-        this.rolesRepository = rolesRepository;
     }
 
     public ApiResponse getDepartment(Long id) {
@@ -72,7 +72,13 @@ public class DepartmentService {
             department.setName(request.getName());
             department.setDescription(request.getDescription());
             department = departmentRepository.save(department);
-        } catch (Exception e){
+        }catch (DataIntegrityViolationException e) {
+            return ApiResponse.builder()
+                    .code("99")
+                    .message("Unable to create department, department details has been used")
+                    .build();
+        }
+        catch (Exception e){
             return ApiResponse.builder()
                     .code("99")
                     .message("Unable to create departments, try again later")
@@ -136,10 +142,56 @@ public class DepartmentService {
                 .build();
     }
 
-    public ApiResponse addManagerToDepartment(String email) {
+//    public ApiResponse addManagerToDepartment(String email) {
+//        Optional<Employee> employee;
+//        Optional<Roles> roles;
+//        Optional<Department> department = Optional.empty();
+//        try{
+//            employee = employeeRepository.findByEmail(email);
+//            if (employee.isEmpty()) {
+//                return ApiResponse.builder()
+//                        .code("90")
+//                        .message("Employee not found")
+//                        .build();
+//            }
+//            employee.get().getRole().getId()
+//            roles = rolesRepository.findById();
+//            if (roles.isEmpty()) {
+//                return ApiResponse.builder()
+//                        .code("90")
+//                        .message("Role not found")
+//                        .build();
+//            }
+//            if(roles.get().getName().equalsIgnoreCase("Manager")){
+//                department = departmentRepository.findById(employee.get().getDepartment().getId());
+//                if (department.isEmpty()) {
+//                    return ApiResponse.builder()
+//                            .code("90")
+//                            .message("Department not found")
+//                            .build();
+//                }
+//                department.get().setManagerId(String.valueOf(roles.get().getId()));
+//                departmentRepository.save(department.get());
+//            }
+//
+//        }catch (Exception e){
+//            return ApiResponse.builder()
+//                    .code("99")
+//                    .message("Department not found")
+//                    .build();
+//        }
+//        return ApiResponse.builder()
+//                .code("00")
+//                .message(String.format("Successfully added a manager to %s department", department.get().getName()))
+//                .data(department.get())
+//                .build();
+//    }
+
+    public ApiResponse viewEmployeesInDepartment(String email) {
         Optional<Employee> employee;
-        Optional<Roles> roles;
-        Optional<Department> department = Optional.empty();
+        Optional<Department> department;
+        List<Employee> employees = new ArrayList<>();
+
         try{
             employee = employeeRepository.findByEmail(email);
             if (employee.isEmpty()) {
@@ -148,35 +200,24 @@ public class DepartmentService {
                         .message("Employee not found")
                         .build();
             }
-            roles = rolesRepository.findById(employee.get().getRole().getId());
-            if (roles.isEmpty()) {
+            department = departmentRepository.findById(employee.get().getDepartment().getId());
+            if (department.isEmpty()) {
                 return ApiResponse.builder()
                         .code("90")
-                        .message("Role not found")
+                        .message("Department not found")
                         .build();
             }
-            if(roles.get().getName().equalsIgnoreCase("Manager")){
-                department = departmentRepository.findById(employee.get().getDepartment().getId());
-                if (department.isEmpty()) {
-                    return ApiResponse.builder()
-                            .code("90")
-                            .message("Department not found")
-                            .build();
-                }
-                department.get().setManagerId(String.valueOf(roles.get().getId()));
-                departmentRepository.save(department.get());
-            }
-
+            employees = employeeRepository.findEmployeesByDepartment(department.get());
         }catch (Exception e){
             return ApiResponse.builder()
                     .code("99")
-                    .message("Department not found")
+                    .message("Unable to retrieve employees, try again later")
                     .build();
         }
         return ApiResponse.builder()
                 .code("00")
-                .message(String.format("Successfully added a manager to %s department", department.get().getName()))
-                .data(department.get())
+                .message("Success")
+                .data(employees)
                 .build();
     }
 }

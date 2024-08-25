@@ -2,6 +2,7 @@ package com.softaliance.employeemanagement.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,9 +24,10 @@ import java.util.Set;
 @EntityListeners(AuditingEntityListener.class)
 public class Department {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "dep_seq_gen")
-    @SequenceGenerator(name = "dep_seq_gen", sequenceName = "department_sequence", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @NotNull(message = "name cannot be null")
+    @Column(unique = true)
     private String name;
     private String description;
     @CreatedDate
@@ -36,4 +38,7 @@ public class Department {
     @JsonBackReference
     @OneToMany(mappedBy = "department", fetch = FetchType.EAGER)
     private Set<Employee> employees = new HashSet<>();
+
+    public <E> Department(long l, String hr, String hrDepartment, LocalDateTime now, LocalDateTime now1, HashSet<E> es) {
+    }
 }

@@ -51,11 +51,9 @@ public class Employee implements UserDetails {
     @NotNull
     @ManyToOne
     private Department department = new Department();
-//    @Enumerated(EnumType.STRING)
-//    private Role role;
     @NotNull
-    @OneToOne
-    private Roles role;
+    @ManyToOne
+    private Roles roles = new Roles();
     @CreatedDate
     private LocalDateTime createdAt;
     @LastModifiedDate
@@ -63,7 +61,7 @@ public class Employee implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role.getName()));
+        return List.of(new SimpleGrantedAuthority(roles.getName()));
     }
 
     @Override

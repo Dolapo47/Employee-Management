@@ -1,9 +1,10 @@
 package com.softaliance.employeemanagement.controller;
 
-import com.softaliance.employeemanagement.requests.DepartmentRequest;
+import com.softaliance.employeemanagement.requests.RolesRequest;
 import com.softaliance.employeemanagement.responses.ApiResponse;
 import com.softaliance.employeemanagement.services.RolesService;
 import com.softaliance.employeemanagement.utils.Utilities;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,13 +23,13 @@ public class RoleController {
     @GetMapping("/get/{id}")
     public ResponseEntity<ApiResponse> getRole(@PathVariable String id) {
         ApiResponse apiResponse;
-        apiResponse = rolesService.getDepartment(Long.parseLong(id));
+        apiResponse = rolesService.getRole(Long.parseLong(id));
         return utilities.getApiResponseResponseEntity(apiResponse);
     }
 
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse> createRole(@RequestBody DepartmentRequest request) {
-        ApiResponse apiResponse = rolesService.createDepartment(request);
+    public ResponseEntity<ApiResponse> createRole(@Valid @RequestBody RolesRequest request) {
+        ApiResponse apiResponse = rolesService.createRoles(request);
         if(apiResponse.getCode().equals("00")){
             return new ResponseEntity<>(apiResponse, HttpStatus.CREATED);
         }
@@ -37,7 +38,7 @@ public class RoleController {
 
     @GetMapping("/get/all")
     public ResponseEntity<ApiResponse> getAllRoles() {
-        ApiResponse apiResponse = rolesService.getAllDepartments();
+        ApiResponse apiResponse = rolesService.getAllRoles();
         if(apiResponse.getCode().equals("00")){
             return new ResponseEntity<>(apiResponse, HttpStatus.OK);
         }
@@ -45,14 +46,14 @@ public class RoleController {
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<ApiResponse> updateRole(@RequestBody DepartmentRequest request, @PathVariable String id) {
-        ApiResponse apiResponse = rolesService.updateDepartment(Long.parseLong(id), request);
+    public ResponseEntity<ApiResponse> updateRole(@RequestBody RolesRequest request, @PathVariable String id) {
+        ApiResponse apiResponse = rolesService.updateRole(Long.parseLong(id), request);
         return utilities.getApiResponseResponseEntity(apiResponse);
     }
 
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<ApiResponse> deleteRole(@PathVariable String id) {
-        ApiResponse apiResponse = rolesService.deleteDepartment(Long.parseLong(id));
+        ApiResponse apiResponse = rolesService.deleteRole(Long.parseLong(id));
         return utilities.getApiResponseResponseEntity(apiResponse);
     }
 }

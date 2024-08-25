@@ -1,6 +1,5 @@
 package com.softaliance.employeemanagement.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.softaliance.employeemanagement.models.Department;
 import com.softaliance.employeemanagement.models.Employee;
 import com.softaliance.employeemanagement.models.Roles;
@@ -11,7 +10,6 @@ import com.softaliance.employeemanagement.requests.EmployeeRequest;
 import com.softaliance.employeemanagement.responses.ApiResponse;
 import com.softaliance.employeemanagement.responses.AuthResponse;
 import com.softaliance.employeemanagement.utils.Utilities;
-import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,25 +27,22 @@ public class EmployeeService {
     private final DepartmentRepository departmentRepository;
     private final RolesRepository roleRepository;
     private final Utilities utilities;
-    private final ObjectMapper objectMapper;
-    private final RolesRepository rolesRepository;
 
     @Value("${employee.password}")
     private String employeePassword;
 
-    public EmployeeService(EmployeeRepository employeeRepository, ObjectMapper objectMapper, DepartmentRepository departmentRepository, RolesRepository roleRepository, Utilities utilities, RolesRepository rolesRepository) {
+    public EmployeeService(EmployeeRepository employeeRepository, DepartmentRepository departmentRepository, RolesRepository roleRepository, Utilities utilities) {
         this.employeeRepository = employeeRepository;
         this.departmentRepository = departmentRepository;
         this.roleRepository = roleRepository;
         this.utilities = utilities;
-        this.objectMapper = objectMapper;
-        this.rolesRepository = rolesRepository;
     }
     public ApiResponse getEmployee(Long id) {
         Optional<Employee> employee;
         try{
             employee = employeeRepository.findById(id);
             if (employee.isPresent()) {
+                employee.get().setPassword(null);
                 return ApiResponse.builder()
                         .code("00")
                         .message("Success")
@@ -104,6 +99,9 @@ public class EmployeeService {
         List<Employee> employees;
         try{
             employees = employeeRepository.findAll();
+            for (Employee employee : employees) {
+                employee.setPassword(null);
+            }
             return ApiResponse.builder()
                     .code("00")
                     .message("Success")
@@ -139,7 +137,7 @@ public class EmployeeService {
                     !createEmployeeRequest.getRoleId().isEmpty()) {
                 savedRole = roleRepository.findById(Long.parseLong(createEmployeeRequest.getRoleId()));
                 if(savedRole.isPresent()) {
-                    savedRole.ifPresent(employee::setRole);
+                    savedRole.ifPresent(employee::setRoles);
                 }else{
                     return ApiResponse.builder()
                             .code("99")
@@ -246,43 +244,6 @@ public class EmployeeService {
         return ApiResponse.builder()
                 .code("00")
                 .message("Success")
-                .build();
-    }
-
-    public ApiResponse fetchEmployeeByDepartment(String email) {
-        Optional<Employee> savedEmployee;
-        Optional<Roles> savedRole;
-        List<Employee> employees = new ArrayList<>();
-        try{
-            savedEmployee = employeeRepository.findByEmail(email);
-            if(savedEmployee.isPresent()){
-                savedRole = roleRepository.findById(savedEmployee.get().getRole().getId());
-                if(savedRole.isPresent()){
-                    employees = employeeRepository.findEmployeesByRoleName(savedRole.get().getName());
-                }else {
-                    return ApiResponse.builder()
-                            .code("99")
-                            .message("Role not found")
-                            .build();
-                }
-            }else{
-                return ApiResponse.builder()
-                        .code("99")
-                        .message("Employee not found")
-                        .build();
-            }
-
-        }catch (Exception e){
-            logger.error(e.getMessage());
-            ApiResponse.builder()
-                    .code("99")
-                    .message("Unable to complete request, try again later")
-                    .build();
-        }
-        return ApiResponse.builder()
-                .code("00")
-                .message("Success")
-                .data(employees)
                 .build();
     }
 }

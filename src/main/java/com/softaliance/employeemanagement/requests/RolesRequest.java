@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class DepartmentRequest {
+public class RolesRequest {
     @NotNull(message = "name cannot be null")
     @NotEmpty(message = "Enter name")
     private String name;
