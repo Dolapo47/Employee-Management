@@ -2,6 +2,7 @@ package com.softaliance.employeemanagement.services;
 
 import com.softaliance.employeemanagement.models.Department;
 import com.softaliance.employeemanagement.models.Employee;
+import com.softaliance.employeemanagement.models.Roles;
 import com.softaliance.employeemanagement.repository.DepartmentRepository;
 import com.softaliance.employeemanagement.repository.EmployeeRepository;
 import com.softaliance.employeemanagement.requests.DepartmentRequest;
@@ -12,6 +13,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -20,6 +24,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+import static org.mockito.internal.verification.VerificationModeFactory.times;
 
 
 class DepartmentServiceTest {
@@ -32,9 +38,17 @@ class DepartmentServiceTest {
     @Mock
     private EmployeeRepository employeeRepository;
 
+    @Mock
+    private Authentication authentication;
+
+    @Mock
+    private SecurityContext securityContext;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        SecurityContextHolder.setContext(securityContext); // Set up the SecurityContext
+        when(securityContext.getAuthentication()).thenReturn(authentication);
     }
 
     @Test
@@ -49,7 +63,7 @@ class DepartmentServiceTest {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        Mockito.when(departmentRepository.save(Mockito.any(Department.class))).thenReturn(department);
+        when(departmentRepository.save(Mockito.any(Department.class))).thenReturn(department);
         // When
         ApiResponse apiResponse = departmentService.createDepartment(request);
         // Then
@@ -65,7 +79,7 @@ class DepartmentServiceTest {
         // Given
         DepartmentRequest request = new DepartmentRequest("HR", "HR Department");
 
-        Mockito.when(departmentRepository.save(Mockito.any(Department.class)))
+        when(departmentRepository.save(Mockito.any(Department.class)))
                 .thenThrow(new DataIntegrityViolationException("Duplicate entry"));
 
         ApiResponse expectedResponse = ApiResponse.builder()
@@ -88,7 +102,7 @@ class DepartmentServiceTest {
         // Given
         DepartmentRequest request = new DepartmentRequest("HR", "HR Department");
 
-        Mockito.when(departmentRepository.save(Mockito.any(Department.class)))
+        when(departmentRepository.save(Mockito.any(Department.class)))
                 .thenThrow(new RuntimeException("Unable to save department"));
 
         ApiResponse expectedResponse = ApiResponse.builder()
@@ -132,7 +146,7 @@ class DepartmentServiceTest {
         Long departmentId = 1L;
         Department department = new Department();
         department.setId(departmentId);
-        Mockito.when(departmentRepository.findById(departmentId)).thenReturn(Optional.of(department));
+        when(departmentRepository.findById(departmentId)).thenReturn(Optional.of(department));
 
         // When
         ApiResponse response = departmentService.getDepartment(departmentId);
@@ -148,7 +162,7 @@ class DepartmentServiceTest {
     public void should_return_error_when_department_not_found() {
         // Given
         Long departmentId = 1L;
-        Mockito.when(departmentRepository.findById(departmentId)).thenReturn(Optional.empty());
+        when(departmentRepository.findById(departmentId)).thenReturn(Optional.empty());
 
         // When
         ApiResponse response = departmentService.getDepartment(departmentId);
@@ -164,7 +178,7 @@ class DepartmentServiceTest {
     public void should_return_error_when_exception_is_thrown() {
         // Given
         Long departmentId = 1L;
-        Mockito.when(departmentRepository.findById(departmentId)).thenThrow(new RuntimeException("Database error"));
+        when(departmentRepository.findById(departmentId)).thenThrow(new RuntimeException("Database error"));
 
         // When
         ApiResponse response = departmentService.getDepartment(departmentId);
@@ -183,7 +197,7 @@ class DepartmentServiceTest {
                 new Department(1L, "HR", "HR Department", LocalDateTime.now(), LocalDateTime.now(), new HashSet<>()),
                 new Department(2L, "Finance", "Finance Department", LocalDateTime.now(), LocalDateTime.now(), new HashSet<>())
         );
-        Mockito.when(departmentRepository.findAll()).thenReturn(departments);
+        when(departmentRepository.findAll()).thenReturn(departments);
 
         // When
         ApiResponse apiResponse = departmentService.getAllDepartments();
@@ -199,7 +213,7 @@ class DepartmentServiceTest {
     public void should_return_success_with_empty_list_when_no_departments_found() {
         // Given
         List<Department> departments = Collections.emptyList();
-        Mockito.when(departmentRepository.findAll()).thenReturn(departments);
+        when(departmentRepository.findAll()).thenReturn(departments);
 
         // When
         ApiResponse apiResponse = departmentService.getAllDepartments();
@@ -214,7 +228,7 @@ class DepartmentServiceTest {
     @Test
     public void should_return_error_when_exception_occurs() {
         // Given
-        Mockito.when(departmentRepository.findAll()).thenThrow(new RuntimeException("Database is down"));
+        when(departmentRepository.findAll()).thenThrow(new RuntimeException("Database is down"));
 
         // When
         ApiResponse apiResponse = departmentService.getAllDepartments();
@@ -239,8 +253,8 @@ class DepartmentServiceTest {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        Mockito.when(departmentRepository.findById(departmentId)).thenReturn(Optional.of(department));
-        Mockito.when(departmentRepository.save(department)).thenReturn(department);
+        when(departmentRepository.findById(departmentId)).thenReturn(Optional.of(department));
+        when(departmentRepository.save(department)).thenReturn(department);
 
         // When
         ApiResponse apiResponse = departmentService.updateDepartment(departmentId, request);
@@ -259,7 +273,7 @@ class DepartmentServiceTest {
         Long departmentId = 1L;
         DepartmentRequest request = new DepartmentRequest("New HR", "New HR Description");
 
-        Mockito.when(departmentRepository.findById(departmentId)).thenReturn(Optional.empty());
+        when(departmentRepository.findById(departmentId)).thenReturn(Optional.empty());
 
         // When
         ApiResponse apiResponse = departmentService.updateDepartment(departmentId, request);
@@ -284,8 +298,8 @@ class DepartmentServiceTest {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        Mockito.when(departmentRepository.findById(departmentId)).thenReturn(Optional.of(department));
-        Mockito.when(departmentRepository.save(department)).thenThrow(new RuntimeException("Database is down"));
+        when(departmentRepository.findById(departmentId)).thenReturn(Optional.of(department));
+        when(departmentRepository.save(department)).thenThrow(new RuntimeException("Database is down"));
 
         // When
         ApiResponse apiResponse = departmentService.updateDepartment(departmentId, request);
@@ -310,8 +324,8 @@ class DepartmentServiceTest {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        Mockito.when(departmentRepository.findById(departmentId)).thenReturn(Optional.of(department));
-        Mockito.when(departmentRepository.save(department)).thenReturn(department);
+        when(departmentRepository.findById(departmentId)).thenReturn(Optional.of(department));
+        when(departmentRepository.save(department)).thenReturn(department);
 
         // When
         ApiResponse apiResponse = departmentService.updateDepartment(departmentId, request);
@@ -334,7 +348,7 @@ class DepartmentServiceTest {
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
-        Mockito.when(departmentRepository.findById(departmentId)).thenReturn(Optional.of(existingDepartment));
+        when(departmentRepository.findById(departmentId)).thenReturn(Optional.of(existingDepartment));
 
         // When
         ApiResponse apiResponse = departmentService.deleteDepartment(departmentId);
@@ -343,14 +357,14 @@ class DepartmentServiceTest {
         assertNotNull(apiResponse);
         assertEquals("00", apiResponse.getCode());
         assertEquals("Success", apiResponse.getMessage());
-        Mockito.verify(departmentRepository, Mockito.times(1)).delete(existingDepartment);
+        verify(departmentRepository, Mockito.times(1)).delete(existingDepartment);
     }
 
     @Test
     public void should_return_error_when_department_not_found_delete() {
         // Given
         Long departmentId = 1L;
-        Mockito.when(departmentRepository.findById(departmentId)).thenReturn(Optional.empty());
+        when(departmentRepository.findById(departmentId)).thenReturn(Optional.empty());
 
         // When
         ApiResponse apiResponse = departmentService.deleteDepartment(departmentId);
@@ -359,7 +373,7 @@ class DepartmentServiceTest {
         assertNotNull(apiResponse);
         assertEquals("90", apiResponse.getCode());
         assertEquals("Department not found", apiResponse.getMessage());
-        Mockito.verify(departmentRepository, Mockito.never()).delete(Mockito.any(Department.class));
+        verify(departmentRepository, never()).delete(Mockito.any(Department.class));
     }
 
     @Test
@@ -373,7 +387,7 @@ class DepartmentServiceTest {
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
-        Mockito.when(departmentRepository.findById(departmentId)).thenReturn(Optional.of(existingDepartment));
+        when(departmentRepository.findById(departmentId)).thenReturn(Optional.of(existingDepartment));
         Mockito.doThrow(new RuntimeException("Database error")).when(departmentRepository).delete(existingDepartment);
 
         // When
@@ -386,81 +400,113 @@ class DepartmentServiceTest {
     }
 
     @Test
-    public void should_return_error_when_employee_not_found() {
-        // Given
-        String email = "nonexistent@example.com";
-        Mockito.when(employeeRepository.findByEmail(email)).thenReturn(Optional.empty());
+    void testViewEmployeesInDepartment_Success() {
+        // Mock the authentication to return an employee's email
+        when(authentication.getName()).thenReturn("manager@example.com");
 
-        // When
-        ApiResponse apiResponse = departmentService.viewEmployeesInDepartment(email);
+        // Mock the employee returned from the repository
+        Employee mockEmployee = new Employee();
+        mockEmployee.setEmail("manager@example.com");
+        Roles role = new Roles();
+        role.setName("manager");
+        mockEmployee.setRoles(role);
+        Department department = new Department();
+        department.setId(1L);
+        mockEmployee.setDepartment(department);
+        when(employeeRepository.findByEmail("manager@example.com")).thenReturn(Optional.of(mockEmployee));
 
-        // Then
-        assertNotNull(apiResponse);
-        assertEquals("90", apiResponse.getCode());
-        assertEquals("Employee not found", apiResponse.getMessage());
-        Mockito.verify(departmentRepository, Mockito.never()).findById(Mockito.anyLong());
-        Mockito.verify(employeeRepository, Mockito.never()).findEmployeesByDepartment(Mockito.any(Department.class));
+        // Mock the department returned from the repository
+        when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
+
+        // Mock the list of employees returned by the repository
+        List<Employee> employeeList = List.of(mockEmployee);  // Use a single employee for simplicity
+        when(employeeRepository.findEmployeesByDepartment(department)).thenReturn(employeeList);
+
+        // Call the method under test
+        ApiResponse response = departmentService.viewEmployeesInDepartment();
+
+        // Assert the response
+        assertEquals("00", response.getCode());
+        assertEquals("Success", response.getMessage());
+        assertEquals(employeeList, response.getData());
+
+        // Verify the interactions with the repositories
+        verify(employeeRepository, Mockito.times(1)).findByEmail("manager@example.com");
+        verify(departmentRepository, Mockito.times(1)).findById(1L);
+        verify(employeeRepository, Mockito.times(1)).findEmployeesByDepartment(department);
     }
 
     @Test
-    public void should_return_error_when_department_not_found_find_employee() {
-        // Given
-        String email = "employee@example.com";
-        Department department = Department.builder().id(1L).build();
-        Employee employee = Employee.builder().email(email).department(department).build();
+    void testViewEmployeesInDepartment_EmployeeNotFound() {
+        when(authentication.getName()).thenReturn("nonexistent@example.com");
+        when(employeeRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
 
-        Mockito.when(employeeRepository.findByEmail(email)).thenReturn(Optional.of(employee));
-        Mockito.when(departmentRepository.findById(1L)).thenReturn(Optional.empty());
+        ApiResponse response = departmentService.viewEmployeesInDepartment();
 
-        // When
-        ApiResponse apiResponse = departmentService.viewEmployeesInDepartment(email);
+        assertEquals("90", response.getCode());
+        assertEquals("Employee not found", response.getMessage());
 
-        // Then
-        assertNotNull(apiResponse);
-        assertEquals("90", apiResponse.getCode());
-        assertEquals("Department not found", apiResponse.getMessage());
-        Mockito.verify(employeeRepository, Mockito.never()).findEmployeesByDepartment(Mockito.any(Department.class));
+        verify(employeeRepository, Mockito.times(1)).findByEmail("nonexistent@example.com");
+        verify(departmentRepository, never()).findById(Mockito.anyLong());
     }
 
     @Test
-    public void should_return_employees_when_department_is_found() {
-        // Given
-        String email = "employee@example.com";
-        Department department = Department.builder().id(1L).build();
-        Employee employee = Employee.builder().email(email).department(department).build();
-        List<Employee> employees = List.of(
-                Employee.builder().email("emp1@example.com").build(),
-                Employee.builder().email("emp2@example.com").build()
-        );
+    void testViewEmployeesInDepartment_EmployeeWithoutPrivileges() {
+        when(authentication.getName()).thenReturn("employee@example.com");
 
-        Mockito.when(employeeRepository.findByEmail(email)).thenReturn(Optional.of(employee));
-        Mockito.when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
-        Mockito.when(employeeRepository.findEmployeesByDepartment(department)).thenReturn(employees);
+        // Mock the employee without manager/admin privileges
+        Employee mockEmployee = new Employee();
+        mockEmployee.setEmail("employee@example.com");
+        Roles role = new Roles();
+        role.setName("user");  // Not a manager or admin
+        mockEmployee.setRoles(role);
+        when(employeeRepository.findByEmail("employee@example.com")).thenReturn(Optional.of(mockEmployee));
 
-        // When
-        ApiResponse apiResponse = departmentService.viewEmployeesInDepartment(email);
+        ApiResponse response = departmentService.viewEmployeesInDepartment();
 
-        // Then
-        assertNotNull(apiResponse);
-        assertEquals("00", apiResponse.getCode());
-        assertEquals("Success", apiResponse.getMessage());
-        assertEquals(employees, apiResponse.getData());
+        assertEquals("99", response.getCode());
+        assertEquals("Employee does not have privileges to access", response.getMessage());
+
+        verify(employeeRepository, times(1)).findByEmail("employee@example.com");
+        verify(departmentRepository, never()).findById(anyLong());
     }
 
     @Test
-    public void should_return_error_when_exception_occurs_during_retrieval() {
-        // Given
-        String email = "employee@example.com";
-        Mockito.when(employeeRepository.findByEmail(email)).thenThrow(new RuntimeException("Database error"));
+    void testViewEmployeesInDepartment_DepartmentNotFound() {
+        when(authentication.getName()).thenReturn("manager@example.com");
 
-        // When
-        ApiResponse apiResponse = departmentService.viewEmployeesInDepartment(email);
+        Employee mockEmployee = new Employee();
+        mockEmployee.setEmail("manager@example.com");
+        Roles role = new Roles();
+        role.setName("manager");
+        mockEmployee.setRoles(role);
+        Department department = new Department();
+        department.setId(1L);
+        mockEmployee.setDepartment(department);
+        when(employeeRepository.findByEmail("manager@example.com")).thenReturn(Optional.of(mockEmployee));
 
-        // Then
-        assertNotNull(apiResponse);
-        assertEquals("99", apiResponse.getCode());
-        assertEquals("Unable to retrieve employees, try again later", apiResponse.getMessage());
-        Mockito.verify(departmentRepository, Mockito.never()).findById(Mockito.anyLong());
-        Mockito.verify(employeeRepository, Mockito.never()).findEmployeesByDepartment(Mockito.any(Department.class));
+        // Mock department not found
+        when(departmentRepository.findById(1L)).thenReturn(Optional.empty());
+
+        ApiResponse response = departmentService.viewEmployeesInDepartment();
+
+        assertEquals("90", response.getCode());
+        assertEquals("Department not found", response.getMessage());
+
+        verify(employeeRepository, times(1)).findByEmail("manager@example.com");
+        verify(departmentRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void testViewEmployeesInDepartment_ExceptionHandling() {
+        when(authentication.getName()).thenReturn("manager@example.com");
+
+        // Simulate an exception when trying to find the employee
+        when(employeeRepository.findByEmail("manager@example.com")).thenThrow(new RuntimeException("Database error"));
+
+        ApiResponse response = departmentService.viewEmployeesInDepartment();
+
+        assertEquals("99", response.getCode());
+        assertEquals("Unable to retrieve employees, try again later", response.getMessage());
     }
 }

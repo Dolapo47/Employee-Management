@@ -19,10 +19,7 @@ import org.mockito.MockitoAnnotations;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -60,12 +57,19 @@ public class EmployeeServiceTest {
         request.setEmail("john.doe@example.com");
 
         Department department = new Department();
+        department.setId(1L);
+        department.setName("HR");
+        department.setDescription("HR department");
         Roles role = new Roles();
+        role.setId(1L);
+        role.setName("Admin");
+        role.setDescription("Admin Role");
         Employee savedEmployee = new Employee();
 
         when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
         when(roleRepository.findById(1L)).thenReturn(Optional.of(role));
         when(employeeRepository.save(any(Employee.class))).thenReturn(savedEmployee);
+        when(utilities.encodePassword(anyString())).thenReturn("encodedPassword");
 
         ApiResponse response = employeeService.addEmployee(request);
 

@@ -35,9 +35,18 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         )
                         .permitAll()
-                        .requestMatchers("/roles/**", "/department/**", "/manager/**").hasAuthority("Admin")
-                                .requestMatchers("/manager/**").hasAuthority("Manager")
-                        .anyRequest().authenticated()
+                        .requestMatchers("/roles/**", "/department/**",
+                                "/employees/get/all", "/employees/create",
+                                "/employees/update/**", "/employees/delete/**"
+                        )
+                        .hasAuthority("Admin")
+                        .requestMatchers("/manager/**")
+                        .hasAnyAuthority(
+                                "Manager",
+                                "Admin"
+                        )
+                        .anyRequest()
+                        .authenticated()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -49,4 +58,5 @@ public class SecurityConfig {
                 );
         return http.build();
     }
+
 }

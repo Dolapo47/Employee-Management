@@ -1,10 +1,8 @@
 package com.softaliance.employeemanagement.controller;
 
-import com.softaliance.employeemanagement.models.Employee;
 import com.softaliance.employeemanagement.requests.EmployeeRequest;
 import com.softaliance.employeemanagement.responses.ApiResponse;
 import com.softaliance.employeemanagement.responses.AuthResponse;
-import com.softaliance.employeemanagement.services.DepartmentService;
 import com.softaliance.employeemanagement.services.EmployeeService;
 import com.softaliance.employeemanagement.utils.Utilities;
 import jakarta.validation.Valid;
@@ -18,12 +16,10 @@ import org.springframework.web.bind.annotation.*;
 public class EmployeeController {
 
     private final EmployeeService employeeService;
-    private final DepartmentService departmentService;
     private final Utilities utilities;
 
-    public EmployeeController(EmployeeService employeeService, DepartmentService departmentService, Utilities utilities) {
+    public EmployeeController(EmployeeService employeeService, Utilities utilities) {
         this.employeeService = employeeService;
-        this.departmentService = departmentService;
         this.utilities = utilities;
     }
 
@@ -45,7 +41,6 @@ public class EmployeeController {
     }
 
     @PostMapping("/create")
-    @PreAuthorize("hasRole('Admin')")
     public ResponseEntity<ApiResponse> createEmployee(@Valid @RequestBody EmployeeRequest request) {
         ApiResponse apiResponse = employeeService.addEmployee(request);
         if(apiResponse.getCode().equals("00")){
@@ -64,14 +59,12 @@ public class EmployeeController {
     }
 
     @PutMapping("/update/{id}")
-    @PreAuthorize("hasRole('Admin')")
     public ResponseEntity<ApiResponse> updateEmployee(@RequestBody EmployeeRequest request, @PathVariable String id) {
         ApiResponse apiResponse = employeeService.updateEmployee(Long.parseLong(id), request);
         return utilities.getApiResponseResponseEntity(apiResponse);
     }
 
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasRole('Admin')")
     public ResponseEntity<ApiResponse> deleteEmployee(@PathVariable String id) {
         ApiResponse apiResponse = employeeService.deleteEmployee(Long.parseLong(id));
         return utilities.getApiResponseResponseEntity(apiResponse);

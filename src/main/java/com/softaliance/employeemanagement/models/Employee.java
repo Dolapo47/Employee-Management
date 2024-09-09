@@ -30,8 +30,7 @@ import java.util.Set;
 public class Employee implements UserDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "emp_seq_gen")
-    @SequenceGenerator(name = "emp_seq_gen", sequenceName = "employee_sequence", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @NotNull
     private String firstName;
@@ -53,12 +52,16 @@ public class Employee implements UserDetails {
     private Department department = new Department();
     @NotNull
     @ManyToOne
+    @JsonIgnore
     private Roles roles = new Roles();
     @CreatedDate
+    @JsonIgnore
     private LocalDateTime createdAt;
     @LastModifiedDate
+    @JsonIgnore
     private LocalDateTime updatedAt;
 
+    @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(roles.getName()));

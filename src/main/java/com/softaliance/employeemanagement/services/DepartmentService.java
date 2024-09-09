@@ -2,16 +2,16 @@ package com.softaliance.employeemanagement.services;
 
 import com.softaliance.employeemanagement.models.Department;
 import com.softaliance.employeemanagement.models.Employee;
-import com.softaliance.employeemanagement.models.Roles;
 import com.softaliance.employeemanagement.repository.DepartmentRepository;
 import com.softaliance.employeemanagement.repository.EmployeeRepository;
 import com.softaliance.employeemanagement.repository.RolesRepository;
 import com.softaliance.employeemanagement.requests.DepartmentRequest;
 import com.softaliance.employeemanagement.responses.ApiResponse;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -142,72 +142,35 @@ public class DepartmentService {
                 .build();
     }
 
-//    public ApiResponse addManagerToDepartment(String email) {
-//        Optional<Employee> employee;
-//        Optional<Roles> roles;
-//        Optional<Department> department = Optional.empty();
-//        try{
-//            employee = employeeRepository.findByEmail(email);
-//            if (employee.isEmpty()) {
-//                return ApiResponse.builder()
-//                        .code("90")
-//                        .message("Employee not found")
-//                        .build();
-//            }
-//            employee.get().getRole().getId()
-//            roles = rolesRepository.findById();
-//            if (roles.isEmpty()) {
-//                return ApiResponse.builder()
-//                        .code("90")
-//                        .message("Role not found")
-//                        .build();
-//            }
-//            if(roles.get().getName().equalsIgnoreCase("Manager")){
-//                department = departmentRepository.findById(employee.get().getDepartment().getId());
-//                if (department.isEmpty()) {
-//                    return ApiResponse.builder()
-//                            .code("90")
-//                            .message("Department not found")
-//                            .build();
-//                }
-//                department.get().setManagerId(String.valueOf(roles.get().getId()));
-//                departmentRepository.save(department.get());
-//            }
-//
-//        }catch (Exception e){
-//            return ApiResponse.builder()
-//                    .code("99")
-//                    .message("Department not found")
-//                    .build();
-//        }
-//        return ApiResponse.builder()
-//                .code("00")
-//                .message(String.format("Successfully added a manager to %s department", department.get().getName()))
-//                .data(department.get())
-//                .build();
-//    }
-
-    public ApiResponse viewEmployeesInDepartment(String email) {
+    public ApiResponse viewEmployeesInDepartment() {
         Optional<Employee> employee;
         Optional<Department> department;
-        List<Employee> employees = new ArrayList<>();
-
+        List<Employee> employees;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         try{
-            employee = employeeRepository.findByEmail(email);
+            employee = employeeRepository.findByEmail(authentication.getName());
             if (employee.isEmpty()) {
                 return ApiResponse.builder()
                         .code("90")
                         .message("Employee not found")
                         .build();
             }
-            department = departmentRepository.findById(employee.get().getDepartment().getId());
-            if (department.isEmpty()) {
+            if(employee.get().getRoles().getName().equalsIgnoreCase("manager")
+            || employee.get().getRoles().getName().equalsIgnoreCase("admin")) {
+                department = departmentRepository.findById(employee.get().getDepartment().getId());
+                if (department.isEmpty()) {
+                    return ApiResponse.builder()
+                            .code("90")
+                            .message("Department not found")
+                            .build();
+                }
+                employees = employeeRepository.findEmployeesByDepartment(department.get());
+            }else{
                 return ApiResponse.builder()
-                        .code("90")
-                        .message("Department not found")
+                        .code("99")
+                        .message("Employee does not have privileges to access")
                         .build();
             }
-            employees = employeeRepository.findEmployeesByDepartment(department.get());
         }catch (Exception e){
             return ApiResponse.builder()
                     .code("99")

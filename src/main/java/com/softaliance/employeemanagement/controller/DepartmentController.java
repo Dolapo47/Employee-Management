@@ -1,5 +1,7 @@
 package com.softaliance.employeemanagement.controller;
 
+import com.softaliance.employeemanagement.models.Department;
+import com.softaliance.employeemanagement.models.Employee;
 import com.softaliance.employeemanagement.requests.DepartmentRequest;
 import com.softaliance.employeemanagement.responses.ApiResponse;
 import com.softaliance.employeemanagement.services.DepartmentService;
@@ -9,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Set;
 
 @RestController
 @RequestMapping("/department")
@@ -25,6 +29,7 @@ public class DepartmentController {
     public ResponseEntity<ApiResponse> getDepartment(@PathVariable String id) {
         ApiResponse apiResponse;
         apiResponse = departmentService.getDepartment(Long.parseLong(id));
+        Department department = (Department) apiResponse.getData();
         return utilities.getApiResponseResponseEntity(apiResponse);
     }
 
@@ -57,10 +62,4 @@ public class DepartmentController {
         ApiResponse apiResponse = departmentService.deleteDepartment(Long.parseLong(id));
         return utilities.getApiResponseResponseEntity(apiResponse);
     }
-
-//    @GetMapping("/add/manager/{email}")
-//    public ResponseEntity<ApiResponse> addManagerToDepartment(@PathVariable String email) {
-//        ApiResponse apiResponse = departmentService.addManagerToDepartment(email);
-//        return utilities.getApiResponseResponseEntity(apiResponse);
-//    }
 }

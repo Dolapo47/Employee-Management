@@ -136,6 +136,7 @@
     </dependencyManagement>
 
     <build>
+        <finalName>employee-management-app</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
